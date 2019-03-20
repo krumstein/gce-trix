@@ -1,0 +1,9 @@
+BOOTPROTO=static
+DEVICE={{ item.name }}
+ONBOOT=yes
+TYPE=Ethernet
+USERCTL=no
+ZONE=trusted
+NM_CONTROLLED=no
+IPADDR={{ item.ip }}
+NETMASK={{ item.netmask }}

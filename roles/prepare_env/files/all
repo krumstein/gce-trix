@@ -1,0 +1,47 @@
+---
+trix_version: '11'
+project_id: '000000'
+ha: false
+trix_domain: cluster
+
+trix_ctrl1_ip: 10.141.254.254
+trix_ctrl1_bmcip: 10.148.254.254
+trix_ctrl1_heartbeat_ip: 10.146.255.254
+trix_ctrl1_hostname: ctrl0
+
+trix_cluster_net: 10.141.0.0
+trix_cluster_netprefix: 16
+trix_cluster_dhcp_start: 10.141.128.0
+trix_cluster_dhcp_end: 10.141.140.0
+
+
+trix_root: '/trinity'
+
+
+trix_images: '{{ trix_root }}/images'
+trix_shared: '{{ trix_root }}/shared'
+trix_local: '{{ trix_root }}/local'
+trix_home: '{{ trix_root }}/home'
+trix_repos: '{{ trix_root }}/repos'
+
+
+shared_fs_type: 'drbd'
+shared_fs_device: '/dev/vdb'
+
+mongo_db_path: '{{ trix_local }}/var/lib/mongodb'
+
+ssl_cert_path: '{{ trix_local }}/etc/ssl'
+ssl_ca_cert: '{{ ssl_cert_path }}/cluster-ca.crt'
+ssl_cert_group: ssl
+
+enable_selinux: false
+
+enable_slurm_pam: true
+
+enable_heartbeat_link: true
+
+enable_docker: false
+
+additional_env_modules: []
+
+enable_openhpc: true

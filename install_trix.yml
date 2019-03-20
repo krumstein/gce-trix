@@ -1,0 +1,5 @@
+---
+- hosts: ctrls
+  roles:
+  - prepare_env
+

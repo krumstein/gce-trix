@@ -1,0 +1,99 @@
+---
+- name: Add luna repo
+  get_url:
+      url:  https://updates.clustervision.com/luna/1.2/centos/luna-1.2.repo
+      dest: /etc/yum.repos.d/luna-1.2.repo
+
+- name: Install required packages
+  yum:
+    name: ['git', 'ansible', 'luna-ansible', 'tmux', 'sysstat']
+    state: installed
+
+- name: Fetch Trix from GIT
+  git:
+      repo:  http://github.com/krumstein/trinityX
+      dest: /root/trinityX
+      version: openhpc-support
+
+- name: Setup eth1 and eth2 interfaces files
+  template:
+    src: ifcfg-eth.j2
+    dest: /etc/sysconfig/network-scripts/ifcfg-{{ item.name }}
+  with_items:
+  - name: eth1
+    ip: 10.141.254.254
+    netmask: 255.255.0.0
+  - name: eth2
+    ip: 10.146.255.254
+    netmask: 255.255.0.0
+
+- name: Create a ssh key
+  shell: ssh-keygen -b 2048 -t rsa -f /root/.ssh/id_rsa -q -N ""
+  args:
+    creates: /root/.ssh/id_rsa
+
+- name: Slurp public key
+  slurp:
+    src: "/root/.ssh/id_rsa.pub"
+  register: pubkey
+
+- name: Add key to authorized keys
+  authorized_key:
+    user: root
+    state: present
+    key: "{{ pubkey['content']| b64decode }}"
+
+- name: Get host public key
+  command: ssh-keyscan -t rsa "{{ ctrl_hostname }}"
+  changed_when: false
+  register: host_pubkey
+
+- name: Add host key to authorized keys
+  known_hosts:
+    name: "{{ ctrl_hostname }}"
+    key: "{{ host_pubkey['stdout_lines'][-1]}}"
+
+- name: Allow root login
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    line: "PermitRootLogin yes"
+    regexp: "^PermitRootLogin"
+  notify: restart sshd
+
+- name: Setup a working directory
+  file:
+    path: /root/trix/
+    state: directory
+
+- name: Copy ansible.cfg to WD
+  template:
+    src: ansible.cfg.j2
+    dest: /root/trix/ansible.cfg
+
+- name: Copy hosts to WD
+  template:
+    src: hosts.j2
+    dest: /root/trix/hosts
+
+- name: Create group_vars directory
+  file:
+    path: /root/trix/group_vars
+    state: directory
+
+- name: Copy all group_vars
+  copy:
+    src: all
+    dest: /root/trix/group_vars/all
+
+
+- name: Copy controller.yml to WD
+  copy:
+    src: /root/trinityX/site/controller.yml
+    dest: /root/trix/controller.yml
+    remote_src: yes
+
+- name: Install OndrejHome.pcs-modules-2
+  shell: ansible-galaxy install OndrejHome.pcs-modules-2
+  args:
+    chdir: /root/trix
+    creates: /root/trinityX/site/roles/OndrejHome.pcs-modules-2/
