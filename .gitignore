@@ -1,0 +1,6 @@
+*.swp
+*.tfstate
+*.tfstate.backup
+*.retry
+.terraform
+inventory
